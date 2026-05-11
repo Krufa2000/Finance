@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Финансы">
+<meta name="theme-color" content="#0C0C0E">
+<title>Мои Финансы</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0C0C0E;
+    --surf: #16161A;
+    --card: #1E1E24;
+    --accent: #C9A840;
+    --accent-l: rgba(201,168,64,0.12);
+    --text: #F0EFE8;
+    --muted: #888882;
+    --border: #2A2A32;
+    --inc: #3DC990;
+    --exp: #E85555;
+    --inc-l: rgba(61,201,144,0.1);
+    --exp-l: rgba(232,85,85,0.1);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: none;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  header {
+    padding: calc(var(--safe-top) + 16px) 20px 14px;
+    background: var(--surf);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .header-bal { text-align: right; }
+  .header-bal-lbl { font-size: 11px; color: var(--muted); }
+  .header-bal-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  main {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 20px 8px;
+  }
+
+  /* ── TAB BAR ── */
+  nav {
+    display: flex;
+    background: var(--surf);
+    border-top: 1px solid var(--border);
+    padding-bottom: var(--safe-bot);
+    flex-shrink: 0;
+  }
+
+  nav button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 0 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 10px;
+    font-family: 'DM Sans', sans-serif;
+    transition: color .2s;
+  }
+
+  nav button.active { color: var(--accent); }
+  nav button .tab-icon { font-size: 22px; }
+  nav button .tab-dot {
+    width: 20px; height: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  nav button.active .tab-dot { opacity: 1; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .sum-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .sum-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+  }
+
+  .sum-card.inc { border-left: 3px solid var(--inc); }
+  .sum-card.exp { border-left: 3px solid var(--exp); }
+
+  .sum-lbl { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.5px; }
+  .sum-amt { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+  .sum-amt.inc { color: var(--inc); }
+  .sum-amt.exp { color: var(--exp); }
+
+  /* ── INPUT ── */
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surf);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 16px;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+    font-family: 'DM Sans', sans-serif;
+    caret-color: var(--accent);
+    transition: border-color .2s;
+    -webkit-appearance: none;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .mic-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--accent-l);
+    color: var(--accent);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all .2s;
+    -webkit-appearance: none;
+  }
+  .mic-btn.listening {
+    border-color: var(--exp);
+    background: var(--exp-l);
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  .send-btn {
+    flex: 1; height: 52px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: #0C0C0E;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.3px;
+    transition: opacity .2s, transform .1s;
+    -webkit-appearance: none;
+  }
+  .send-btn:active { transform: scale(0.97); }
+  .send-btn:disabled {
+    background: var(--surf);
+    color: var(--muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── FLASH ── */
+  #flash {
+    position: fixed;
+    top: calc(var(--safe-top) + 70px);
+    left: 50%; transform: translateX(-50%);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 14px;
+    z-index: 999;
+    max-width: 380px; width: 90%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+  }
+  #flash.show { opacity: 1; }
+  #flash.success { background: var(--inc-l); border: 1px solid var(--inc); color: var(--inc); }
+  #flash.error   { background: var(--exp-l); border: 1px solid var(--exp); color: var(--exp); }
+
+  /* ── TRANSACTION LIST ── */
+  .section-lbl {
+    font-size: 11px; font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 16px 0 10px;
+  }
+
+  .tx-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tx-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .tx-icon.inc { background: var(--inc-l); }
+  .tx-icon.exp { background: var(--exp-l); }
+
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-name {
+    font-size: 14px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tx-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .tx-right { display: flex; align-items: center; gap: 8px; }
+  .tx-amt {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .tx-amt.inc { color: var(--inc); }
+  .tx-amt.exp { color: var(--exp); }
+
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 20px; padding: 4px;
+    border-radius: 6px; line-height: 1;
+    -webkit-appearance: none;
+  }
+  .del-btn:active { color: var(--exp); }
+
+  /* ── PILLS ── */
+  .pill-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-appearance: none;
+    transition: all .15s;
+  }
+  .pill.active {
+    border-color: var(--accent);
+    background: var(--accent-l);
+    color: var(--accent);
+  }
+
+  /* ── STATS ── */
+  .balance-card {
+    border-radius: 16px;
+    padding: 18px 18px 16px;
+    border: 1px solid rgba(61,201,144,0.2);
+    background: var(--inc-l);
+    margin-bottom: 16px;
+  }
+  .balance-card.neg {
+    border-color: rgba(232,85,85,0.2);
+    background: var(--exp-l);
+  }
+  .balance-lbl { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .balance-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px; font-weight: 700;
+  }
+  .balance-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .cat-bar-wrap { margin-bottom: 12px; }
+  .cat-bar-row {
+    display: flex; align-items: center;
+    gap: 8px; margin-bottom: 6px;
+  }
+  .cat-bar-icon { font-size: 18px; }
+  .cat-bar-label { font-size: 13px; flex: 1; }
+  .cat-bar-val { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; }
+  .cat-bar-track {
+    height: 6px; border-radius: 3px;
+    background: var(--surf);
+    overflow: hidden;
+  }
+  .cat-bar-fill {
+    height: 100%; border-radius: 3px;
+    transition: width .5s ease;
+  }
+
+  canvas#donut { display: block; margin: 0 auto 12px; }
+
+  .legend-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-sub { font-size: 13px; margin-top: 6px; }
+
+  /* ── API KEY MODAL ── */
+  #api-modal {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: flex-end;
+    padding: 0;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+  }
+  #api-modal.show { opacity: 1; pointer-events: all; }
+  .modal-sheet {
+    background: var(--surf);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(var(--safe-bot) + 20px);
+    width: 100%;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 700;
+    margin-bottom: 8px; color: var(--text);
+  }
+  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .modal-input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 12px;
+    -webkit-appearance: none;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-btn {
+    width: 100%; padding: 14px;
+    background: var(--accent); color: #0C0C0E;
+    border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 500;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer; margin-bottom: 8px;
+    -webkit-appearance: none;
+  }
+  .modal-skip {
+    width: 100%; padding: 12px;
+    background: none; color: var(--muted);
+    border: none; font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--accent);
+    background: var(--accent-l); border: 1px solid rgba(201,168,64,0.25);
+    border-radius: 20px; padding: 3px 8px;
+    margin-bottom: 10px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+
+<!-- API Key Modal -->
+<div id="api-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">🤖 Умный парсинг с ИИ</div>
+    <div class="modal-desc">
+      Добавь API-ключ Anthropic, чтобы ИИ понимал любые фразы.<br>
+      Без ключа работает умный парсер на правилах — тоже хорошо!<br><br>
+      Ключ хранится только на устройстве.
+    </div>
+    <input class="modal-input" id="api-key-input" type="password" placeholder="sk-ant-api..." autocomplete="off">
+    <button class="modal-btn" onclick="saveApiKey()">Сохранить ключ</button>
+    <button class="modal-skip" onclick="closeModal()">Продолжить без ИИ</button>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <span class="logo">₽ Финансы</span>
+    <div class="header-bal">
+      <div class="header-bal-lbl">Баланс</div>
+      <div class="header-bal-num" id="header-bal">0 ₽</div>
+    </div>
+  </header>
+
+  <main id="main-content"></main>
+
+  <nav>
+    <button class="active" onclick="switchTab('input')" id="tab-input">
+      <span class="tab-icon">✏️</span>
+      <span>Запись</span>
+      <div class="tab-dot"></div>
+    </button>
+    <button onclick="switchTab('history')" id="tab-history">
+      <span class="tab-icon">📋</span>
+      <span>История</span>
+      <div class="tab-dot"></div>
+    </button>
+    <button onclick="switchTab('stats')" id="tab-stats">
+      <span class="tab-icon">📊</span>
+      <span>Статистика</span>
+      <div class="tab-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<script>
+'use strict';
+
+// ── DATA ──
+const STORAGE_KEY = 'fin-pwa-v1';
+const API_KEY_KEY = 'fin-api-key';
+
+const EXP_CATS = [
+  {id:'food',      l:'Еда и кафе',    i:'🍽',  c:'#E8A838', kw:['еда','кафе','ресторан','обед','ужин','завтрак','продукты','магазин','пятёрочка','перекрёсток','макдак','суши','пицца','кофе','чай','бар']},
+  {id:'transport', l:'Транспорт',     i:'🚇',  c:'#5B8DEF', kw:['такси','метро','автобус','транспорт','проездной','бензин','парковка','убер','яндекс.такси','каршеринг','самокат']},
+  {id:'entertainment',l:'Развлечения',i:'🎭',  c:'#A16EE8', kw:['кино','театр','концерт','игра','развлечения','стриминг','подписка','нетфликс','spotify','steam','клуб']},
+  {id:'health',    l:'Здоровье',      i:'💊',  c:'#4DC9A0', kw:['аптека','врач','больница','лекарство','медицина','здоровье','спорт','фитнес','зал']},
+  {id:'clothes',   l:'Одежда',        i:'👗',  c:'#E85B8D', kw:['одежда','обувь','куртка','футболка','джинсы','магазин']},
+  {id:'home',      l:'Дом / ЖКХ',    i:'🏠',  c:'#5BADE8', kw:['квартира','коммуналка','жкх','аренда','интернет','вода','газ','свет','электричество','мебель','ремонт']},
+  {id:'phone',     l:'Связь',         i:'📱',  c:'#8DE85B', kw:['телефон','связь','мтс','билайн','мегафон','теле2','тариф','пополнить']},
+  {id:'education', l:'Образование',   i:'📚',  c:'#E8D45B', kw:['курс','учёба','книга','обучение','университет','онлайн']},
+  {id:'other_expense', l:'Прочие',    i:'💸',  c:'#777770', kw:[]},
+];
+
+const INC_CATS = [
+  {id:'salary',    l:'Зарплата',      i:'💼',  c:'#3DC990', kw:['зарплата','зп','аванс','оклад']},
+  {id:'freelance', l:'Фриланс',       i:'💻',  c:'#E8A838', kw:['фриланс','проект','заказ','оплата','клиент']},
+  {id:'gift',      l:'Подарок',       i:'🎁',  c:'#E85B8D', kw:['подарок','подарили','дали','перевели']},
+  {id:'investment',l:'Инвестиции',    i:'📈',  c:'#5B8DEF', kw:['дивиденды','акции','инвестиции','брокер']},
+  {id:'other_income',l:'Прочее',      i:'💰',  c:'#777770', kw:[]},
+];
+
+const ALL_CATS = [...EXP_CATS, ...INC_CATS];
+
+let txns = [];
+let currentTab = 'input';
+let histFilter = 'all';
+let recognition = null;
+let isListening = false;
+
+// ── STORAGE ──
+function loadData() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) txns = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(txns)); } catch(e) {}
+}
+
+function getApiKey() { return localStorage.getItem(API_KEY_KEY) || ''; }
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (key) { localStorage.setItem(API_KEY_KEY, key); showFlash('✓ Ключ сохранён. Теперь работает умный ИИ-парсинг!', 'success'); }
+  closeModal();
+}
+function closeModal() { document.getElementById('api-modal').classList.remove('show'); }
+
+// ── SMART RULE-BASED PARSER ──
+function rulesParser(text) {
+  const t = text.toLowerCase();
+
+  // Amount detection
+  let amount = null;
+  const amtMatch = t.match(/(\d[\d\s,]*\.?\d*)\s*(тыс|тысяч|к\b)/);
+  if (amtMatch) {
+    amount = parseFloat(amtMatch[1].replace(/\s/g,'').replace(',','.')) * 1000;
+  } else {
+    const m = t.match(/(\d[\d\s]*\.?\d*)/);
+    if (m) amount = parseFloat(m[1].replace(/\s/g,''));
+  }
+
+  if (!amount) return null;
+
+  // Income keywords
+  const incWords = ['получил','получила','пришло','зарплата','доход','аванс','заработал','заработала','продал','продала','вернули','зп','фриланс'];
+  const isIncome = incWords.some(w => t.includes(w));
+
+  // Currency
+  let currency = '₽';
+  if (t.includes('$') || t.includes('доллар')) currency = '$';
+  else if (t.includes('€') || t.includes('евро')) currency = '€';
+
+  // Category
+  let category = isIncome ? 'other_income' : 'other_expense';
+  const cats = isIncome ? INC_CATS : EXP_CATS;
+  for (const cat of cats) {
+    if (cat.kw.some(kw => t.includes(kw))) { category = cat.id; break; }
+  }
+
+  // Description
+  const stopWords = /(\d[\d\s.,]*|\bрублей?\b|\bрубл[её]й?\b|\bруб\b|\b₽\b|\$|€|тыс|тысяч|\bк\b)/gi;
+  let desc = text.replace(stopWords, '').replace(/\s+/g,' ').trim();
+  if (desc.length > 40) desc = desc.slice(0,40).trim();
+  if (!desc) desc = getCat(category).l;
+
+  return { amount, currency, type: isIncome ? 'income' : 'expense', category, description: desc };
+}
+
+// ── AI PARSER ──
+async function aiParser(text) {
+  const key = getApiKey();
+  if (!key) return null;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: `Распарси: "${text}". Верни ТОЛЬКО JSON: {"amount":число,"currency":"₽","type":"expense" или "income","category":"id","description":"2-4 слова"}. Категории расходов: food,transport,entertainment,health,clothes,home,phone,education,other_expense. Доходов: salary,freelance,gift,investment,other_income. Если нет суммы — amount:null.` }]
+      })
+    });
+    const d = await res.json();
+    if (d.error) return null;
+    const raw = d.content[0].text.replace(/```json|```/g,'').trim();
+    const p = JSON.parse(raw);
+    return p.amount ? p : null;
+  } catch(e) { return null; }
+}
+
+// ── HELPERS ──
+function getCat(id) { return ALL_CATS.find(c => c.id === id) || {l:'Прочее', i:'?', c:'#888'}; }
+
+function fmt(n, cur = '₽') {
+  if (!n && n !== 0) return '—';
+  return new Intl.NumberFormat('ru-RU').format(Math.round(n)) + ' ' + cur;
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso), now = new Date(), diff = now - d;
+  if (diff < 86400000) return d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+  if (diff < 172800000) return 'Вчера';
+  return d.toLocaleDateString('ru-RU', {day:'numeric', month:'short'});
+}
+
+function showFlash(msg, type = 'success') {
+  const el = document.getElementById('flash');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+function totals() {
+  const inc = txns.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const exp = txns.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  return { inc, exp, bal: inc - exp };
+}
+
+function updateHeader() {
+  const { bal } = totals();
+  const el = document.getElementById('header-bal');
+  el.textContent = (bal >= 0 ? '+' : '') + fmt(bal);
+  el.style.color = bal >= 0 ? 'var(--inc)' : 'var(--exp)';
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  currentTab = tab;
+  ['input','history','stats'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+  });
+  render();
+}
+
+// ── VOICE ──
+function toggleMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showFlash('Голосовой ввод не поддерживается', 'error'); return; }
+  if (isListening) {
+    recognition && recognition.stop();
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'ru-RU';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = e => {
+    const t = e.results[0][0].transcript;
+    document.getElementById('tx-input').value = t;
+    document.getElementById('tx-input').dispatchEvent(new Event('input'));
+    stopMic();
+  };
+  recognition.onerror = () => stopMic();
+  recognition.onend = () => stopMic();
+  recognition.start();
+  isListening = true;
+  const btn = document.getElementById('mic-btn');
+  if (btn) { btn.classList.add('listening'); btn.textContent = '⏹'; }
+}
+
+function stopMic() {
+  isListening = false;
+  const btn = document.getElementById('mic-btn');
+  if (btn) { btn.classList.remove('listening'); btn.textContent = '🎤'; }
+}
+
+// ── ADD TRANSACTION ──
+async function addTx() {
+  const input = document.getElementById('tx-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true; btn.textContent = '⏳ Анализирую...';
+
+  let parsed = await aiParser(text);
+  if (!parsed) parsed = rulesParser(text);
+
+  btn.disabled = false; btn.textContent = 'Добавить →';
+
+  if (!parsed) {
+    showFlash('Не нашёл сумму. Укажи её явно: «500 рублей на такси»', 'error');
+    return;
+  }
+
+  const tx = { id: Date.now(), ...parsed, date: new Date().toISOString(), rawText: text };
+  txns.unshift(tx);
+  saveData();
+  input.value = '';
+  input.style.height = 'auto';
+  updateHeader();
+  showFlash('✓ ' + (tx.type==='income'?'+':'-') + fmt(tx.amount, tx.currency) + ' · ' + (tx.description || getCat(tx.category).l), 'success');
+  render();
+}
+
+function deleteTx(id) {
+  txns = txns.filter(t => t.id !== id);
+  saveData();
+  updateHeader();
+  render();
+}
+
+// ── RENDER ──
+function render() {
+  const m = document.getElementById('main-content');
+  if (currentTab === 'input') m.innerHTML = renderInput();
+  else if (currentTab === 'history') m.innerHTML = renderHistory();
+  else m.innerHTML = renderStats();
+
+  updateHeader();
+  bindEvents();
+  if (currentTab === 'stats') drawDonut();
+}
+
+function renderTxRow(tx, showDel = true) {
+  const cat = getCat(tx.category);
+  const sign = tx.type === 'income' ? '+' : '−';
+  return `
+    <div class="tx-row">
+      <div class="tx-icon ${tx.type}">${cat.i}</div>
+      <div class="tx-info">
+        <div class="tx-name">${tx.description || cat.l}</div>
+        <div class="tx-sub">${fmtDate(tx.date)} · ${cat.l}</div>
+      </div>
+      <div class="tx-right">
+        <div class="tx-amt ${tx.type}">${sign}${fmt(tx.amount, tx.currency)}</div>
+        ${showDel ? `<button class="del-btn" onclick="deleteTx(${tx.id})">×</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderInput() {
+  const { inc, exp } = totals();
+  const recent = txns.slice(0, 4);
+  const aiOn = !!getApiKey();
+  return `
+    <div class="sum-row">
+      <div class="sum-card inc">
+        <div class="sum-lbl">ДОХОДЫ</div>
+        <div class="sum-amt inc">${fmt(inc)}</div>
+      </div>
+      <div class="sum-card exp">
+        <div class="sum-lbl">РАСХОДЫ</div>
+        <div class="sum-amt exp">${fmt(exp)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ai-badge" onclick="document.getElementById('api-modal').classList.add('show')">
+        ${aiOn ? '✨ ИИ включён' : '🤖 Добавить ИИ'}
+      </div>
+      <div class="hint">Опиши транзакцию свободно:<br>
+        «Потратил 890 на такси» · «Купил продукты 2300» · «Зарплата 85000»
+      </div>
+      <textarea id="tx-input" rows="3" placeholder="Например: потратил 500 рублей на обед..."></textarea>
+      <div class="btn-row">
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()">🎤</button>
+        <button class="send-btn" id="send-btn" onclick="addTx()" disabled>Добавить →</button>
+      </div>
+    </div>
+
+    ${recent.length ? `<div class="section-lbl">Последние записи</div>${recent.map(t => renderTxRow(t, false)).join('')}` : ''}
+  `;
+}
+
+function renderHistory() {
+  const filtered = histFilter === 'all' ? txns : txns.filter(t => t.type === histFilter);
+  return `
+    <div class="pill-row">
+      <button class="pill ${histFilter==='all'?'active':''}" onclick="setHistFilter('all')">Все</button>
+      <button class="pill ${histFilter==='expense'?'active':''}" onclick="setHistFilter('expense')">Расходы</button>
+      <button class="pill ${histFilter==='income'?'active':''}" onclick="setHistFilter('income')">Доходы</button>
+    </div>
+    ${filtered.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">💳</div><div>Нет записей</div><div class="empty-sub">Добавь первую транзакцию</div></div>`
+      : filtered.map(t => renderTxRow(t, true)).join('')}
+  `;
+}
+
+function setHistFilter(f) {
+  histFilter = f;
+  render();
+}
+
+function renderStats() {
+  const { inc, exp, bal } = totals();
+  if (!txns.length) return `<div class="empty-state"><div class="empty-icon">📊</div><div>Нет данных</div><div class="empty-sub">Добавь транзакции на вкладке Запись</div></div>`;
+
+  const catStats = EXP_CATS.map(cat => ({
+    ...cat, sum: txns.filter(t => t.type==='expense' && t.category===cat.id).reduce((s,t) => s+t.amount, 0)
+  })).filter(c => c.sum > 0).sort((a,b) => b.sum - a.sum);
+
+  const incStats = INC_CATS.map(cat => ({
+    ...cat, sum: txns.filter(t => t.type==='income' && t.category===cat.id).reduce((s,t) => s+t.amount, 0)
+  })).filter(c => c.sum > 0).sort((a,b) => b.sum - a.sum);
+
+  const maxExp = catStats.length ? catStats[0].sum : 1;
+  const maxInc = incStats.length ? incStats[0].sum : 1;
+
+  const legend = catStats.map(c => `<div class="legend-item"><div class="legend-dot" style="background:${c.c}"></div>${c.i} ${c.l}</div>`).join('');
+
+  const expBars = catStats.map(c => `
+    <div class="cat-bar-wrap">
+      <div class="cat-bar-row">
+        <span class="cat-bar-icon">${c.i}</span>
+        <span class="cat-bar-label">${c.l}</span>
+        <span class="cat-bar-val" style="color:var(--exp)">${fmt(c.sum)}</span>
+      </div>
+      <div class="cat-bar-track">
+        <div class="cat-bar-fill" style="width:${(c.sum/maxExp*100).toFixed(1)}%;background:${c.c}"></div>
+      </div>
+    </div>`).join('');
+
+  const incBars = incStats.map(c => `
+    <div class="cat-bar-wrap">
+      <div class="cat-bar-row">
+        <span class="cat-bar-icon">${c.i}</span>
+        <span class="cat-bar-label">${c.l}</span>
+        <span class="cat-bar-val" style="color:var(--inc)">${fmt(c.sum)}</span>
+      </div>
+      <div class="cat-bar-track">
+        <div class="cat-bar-fill" style="width:${(c.sum/maxInc*100).toFixed(1)}%;background:${c.c}"></div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="balance-card ${bal<0?'neg':''}">
+      <div class="balance-lbl">БАЛАНС</div>
+      <div class="balance-num" style="color:${bal>=0?'var(--inc)':'var(--exp)'}">${(bal>=0?'+':'')+fmt(bal)}</div>
+      <div class="balance-sub">${txns.length} операций · +${fmt(inc)} / −${fmt(exp)}</div>
+    </div>
+
+    ${catStats.length ? `
+      <div class="section-lbl">Расходы по категориям</div>
+      <canvas id="donut" width="200" height="200"></canvas>
+      <div class="legend-wrap">${legend}</div>
+      ${expBars}
+    ` : ''}
+
+    ${incStats.length ? `
+      <div class="section-lbl" style="margin-top:16px">Источники дохода</div>
+      ${incBars}
+    ` : ''}
+  `;
+}
+
+function drawDonut() {
+  const canvas = document.getElementById('donut');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const catStats = EXP_CATS.map(cat => ({
+    ...cat, sum: txns.filter(t => t.type==='expense' && t.category===cat.id).reduce((s,t) => s+t.amount, 0)
+  })).filter(c => c.sum > 0);
+
+  if (!catStats.length) return;
+  const total = catStats.reduce((s,c) => s+c.sum, 0);
+  const cx = 100, cy = 100, r = 80, ri = 52;
+  let angle = -Math.PI / 2;
+  ctx.clearRect(0, 0, 200, 200);
+
+  catStats.forEach(c => {
+    const slice = (c.sum / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = c.c;
+    ctx.fill();
+    angle += slice;
+  });
+
+  // Inner hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, ri, 0, Math.PI * 2);
+  ctx.fillStyle = '#0C0C0E';
+  ctx.fill();
+
+  // Center text
+  ctx.fillStyle = '#F0EFE8';
+  ctx.textAlign = 'center';
+  ctx.font = '500 13px DM Sans, sans-serif';
+  ctx.fillText('расходы', cx, cy - 6);
+  ctx.font = '700 15px Syne, sans-serif';
+  ctx.fillText(fmt(total), cx, cy + 14);
+}
+
+function bindEvents() {
+  const inp = document.getElementById('tx-input');
+  const btn = document.getElementById('send-btn');
+  if (inp) {
+    inp.addEventListener('input', () => {
+      btn.disabled = !inp.value.trim();
+      inp.style.height = 'auto';
+      inp.style.height = inp.scrollHeight + 'px';
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && inp.value.trim()) {
+        e.preventDefault(); addTx();
+      }
+    });
+  }
+}
+
+// ── INIT ──
+loadData();
+render();
+
+// Register service worker for offline
+if ('serviceWorker' in navigator) {
+  const sw = `
+    const CACHE = 'fin-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/'])));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)).catch(() => caches.match('/')));
+    });
+  `;
+  const blob = new Blob([sw], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// First launch
+if (!localStorage.getItem('fin-launched')) {
+  localStorage.setItem('fin-launched','1');
+  setTimeout(() => document.getElementById('api-modal').classList.add('show'), 800);
+}
+</script>
+</body>
+</html>
